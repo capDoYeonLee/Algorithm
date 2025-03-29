@@ -5,72 +5,88 @@ import java.util.StringTokenizer;
 
 public class Main {
 
-	static int max = Integer.MIN_VALUE;
-	static int[][] arr;
-	static boolean[][] visit;
-	static int n;
-	static int m;
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static int N, M, maxSum = 0;
+    static int[][] grid;
+    static boolean[][] visited;
 
-	static int[] dx = {-1,1,0,0};
-	static int[] dy = {0,0,-1,1};
+    static int[] dx = {-1, 1, 0, 0};
+    static int[] dy = {0, 0, -1, 1};
 
-	public static void main(String[] args) throws NumberFormatException, IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws IOException {
+        StringTokenizer st = new StringTokenizer(br.readLine(), " ");
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        grid = new int[N][M];
+        visited = new boolean[N][M];
 
-		StringTokenizer st = new StringTokenizer(br.readLine());
+        for (int i = 0; i < N; i++) {
+            StringTokenizer tt = new StringTokenizer(br.readLine(), " ");
+            for (int j = 0; j < M; j++) {
+                grid[i][j] = Integer.parseInt(tt.nextToken());
+            }
+        }
 
-		n = Integer.parseInt(st.nextToken());
-		m = Integer.parseInt(st.nextToken());
-		arr = new int[n][m];
-		visit = new boolean[n][m];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                visited[i][j] = true;
+                dfs(i, j, 1, grid[i][j]);
+                visited[i][j] = false;
 
-		
-		for(int i = 0; i < n; i++) {
-			st = new StringTokenizer(br.readLine());
-			for(int j = 0; j < m; j++) {
-				arr[i][j] = Integer.parseInt(st.nextToken());
-			}
-		}
+                // T자 모양 체크
+                checkTShape(i, j);
+            }
+        }
+        System.out.println(maxSum);
+    }
 
-		
-		for(int i = 0; i < n; i++) {
-			for(int j = 0; j < m; j++) {
-				visit[i][j] = true;
-				solve(i,j,arr[i][j],1);
-				visit[i][j] = false;
-			}
-		}
+    public static void dfs(int x, int y, int depth, int total) {
+        if (depth == 4) {
+            maxSum = Math.max(maxSum, total);
+            return;
+        }
 
-		System.out.println(max);
-	}
+        for (int i = 0; i < 4; i++) {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
 
-	static void solve(int row, int col, int sum, int count) {
+            // 여기에서 ny의 범위를 N이 아니라 M으로 변경해야 함
+            if (nx < 0 || nx >= N || ny < 0 || ny >= M || visited[nx][ny]) {
+                continue;
+            }
 
-		if(count == 4) {
-			max = Math.max(max, sum);
-			return;
-		}
+            visited[nx][ny] = true;
+            dfs(nx, ny, depth + 1, total + grid[nx][ny]);
+            visited[nx][ny] = false;
+        }
+    }
 
-		for(int i = 0; i < 4; i++) {
-			int curRow = row + dx[i];
-			int curCol = col + dy[i];
+    static void checkTShape(int x, int y) {
+        int[][] tShapes = {
+                {0, -1, 0, 1, 1, 0},  // ㅗ
+                {0, -1, 0, 1, -1, 0}, // ㅜ
+                {-1, 0, 1, 0, 0, 1},  // ㅏ
+                {-1, 0, 1, 0, 0, -1}  // ㅓ
+        };
 
-			if(curRow < 0 || curRow >= n || curCol < 0 || curCol >= m) {
-				continue;
-			}
+        for (int[] shape : tShapes) {
+            int sum = grid[x][y];
+            boolean valid = true;
 
-			if(!visit[curRow][curCol]) {
+            for (int i = 0; i < 3; i++) {
+                int nx = x + shape[i * 2];
+                int ny = y + shape[i * 2 + 1];
 
-				if(count == 2) {
-					visit[curRow][curCol] = true;
-					solve(row, col, sum + arr[curRow][curCol], count + 1);
-					visit[curRow][curCol] = false;
-				}
+                if (nx < 0 || nx >= N || ny < 0 || ny >= M) {
+                    valid = false;
+                    break;
+                }
+                sum += grid[nx][ny];
+            }
 
-				visit[curRow][curCol] = true;
-				solve(curRow, curCol, sum + arr[curRow][curCol], count + 1);
-				visit[curRow][curCol] = false;
-			}
-		}
-	}
+            if (valid) {
+                maxSum = Math.max(maxSum, sum);
+            }
+        }
+    }
 }
